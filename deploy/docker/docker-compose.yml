@@ -1,0 +1,78 @@
+# =============================================================================
+#  CheckoutSeguro — Docker Compose (Ambiente de Laboratório Completo)
+#  Sobe o app CheckoutSeguro + Fazendinha E-commerce para testes integrados.
+#  Uso:
+#    docker compose -f deploy/docker/docker-compose.yml up -d
+# =============================================================================
+
+version: "3.9"
+
+services:
+  # ── App CheckoutSeguro (Self-Custody Local) ────────────────────────────────
+  checkoutseguro:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+    container_name: checkoutseguro-app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:7432:7432"   # Expõe apenas para localhost
+    volumes:
+      - checkoutseguro_wallet:/data/wallet
+      - checkoutseguro_certs:/data/certs
+      - checkoutseguro_logs:/data/logs
+    environment:
+      - CHECKOUTSEGURO_ENV=production
+      - CHECKOUTSEGURO_PORT=7432
+      - CHECKOUTSEGURO_LOG_LEVEL=info
+      - CHECKOUTSEGURO_DB_PATH=/data/wallet/identity.db
+      - CHECKOUTSEGURO_USE_HTTPS=true
+      - CHECKOUTSEGURO_CERT_FILE=/data/certs/cert.pem
+      - CHECKOUTSEGURO_KEY_FILE=/data/certs/key.pem
+    healthcheck:
+      test: ["CMD", "curl", "-fsk", "https://localhost:7432/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - checkoutseguro_net
+
+  # ── Fazendinha E-commerce (Laboratório de Testes) ─────────────────────────
+  fazendinha:
+    build:
+      context: ../../fazendinha-ecommerce
+      dockerfile: Dockerfile
+    container_name: checkoutseguro-fazendinha
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - fazendinha_data:/data
+    environment:
+      - FAZENDINHA_ENV=production
+      - FAZENDINHA_PORT=8000
+      - FAZENDINHA_DB_PATH=/data/orders.db
+      - CHECKOUTSEGURO_APP_URL=https://checkoutseguro:7432
+    depends_on:
+      checkoutseguro:
+        condition: service_healthy
+    networks:
+      - checkoutseguro_net
+
+volumes:
+  checkoutseguro_wallet:
+    driver: local
+  checkoutseguro_certs:
+    driver: local
+  checkoutseguro_logs:
+    driver: local
+  fazendinha_data:
+    driver: local
+
+networks:
+  checkoutseguro_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
