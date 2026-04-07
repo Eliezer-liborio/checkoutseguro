@@ -1,0 +1,36 @@
+sequenceDiagram
+    autonumber
+    actor U as Usuário (Novo)
+    participant EXT as Extensão / App Mobile
+    participant IDP as Identity Service<br/>(checkoutseguro)
+    participant WS as Wallet Service<br/>(carteira-ethereum)
+    participant DB as Banco de Dados
+
+    Note over U,DB: ── CENÁRIO 1: PRIMEIRO ACESSO ─ CADASTRO ÚNICO ──
+
+    U->>EXT: Acessa loja parceira pela 1ª vez
+    EXT-->>U: Detecta: usuário sem conta CheckoutSeguro<br/>Exibe banner "Criar sua identidade segura"
+
+    U->>EXT: Clica em "Criar conta gratuita"
+    EXT-->>U: Formulário: e-mail + telefone
+
+    U->>EXT: Preenche e-mail e telefone
+    EXT->>IDP: POST /identity/register<br/>{email, telefone}
+
+    IDP->>WS: Gera carteira Ethereum
+    WS-->>IDP: {endereço, chave_privada, mnemônico}
+
+    IDP->>IDP: Gera frase de segurança aleatória<br/>(ex: "tigre-azul-montanha-7")
+    IDP->>IDP: Criptografa chave privada (Fernet)<br/>Hash da frase (bcrypt)
+    IDP->>DB: Persiste usuário<br/>{email, telefone, endereço,<br/>chave_enc, frase_hash}
+
+    IDP-->>EXT: Retorna pacote de onboarding
+
+    Note over EXT,U: ── TELA DE ONBOARDING ──
+    EXT-->>U: Exibe cartão com:<br/>① Endereço público (copiar)<br/>② Frase de segurança (copiar)<br/>③ Palavras mnemônicas (copiar)<br/>⚠️ "Guarde agora — não mostraremos novamente"
+
+    U->>EXT: Confirma "Salvei minhas informações"
+    EXT->>IDP: POST /identity/confirm/{userId}
+    IDP->>DB: Marca conta como ativada
+
+    EXT-->>U: Conta criada!<br/>Redirecionado para o checkout da loja

@@ -1,0 +1,39 @@
+# Ambiente Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Variáveis de ambiente (NUNCA commitar)
+.env
+*.env
+
+# Bancos de dados locais
+*.db
+*.sqlite
+
+# Arquivos de chave e segredos
+*.key
+*.pem
+*.cap
+fernet.key
+
+# Node.js
+node_modules/
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

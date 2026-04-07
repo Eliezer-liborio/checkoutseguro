@@ -1,0 +1,179 @@
+direction: right
+
+title: {
+  label: "CheckoutSeguro — Arquitetura Geral"
+  near: top-center
+  shape: text
+  style.font-size: 20
+  style.bold: true
+}
+
+# ══════════════════════════════════════════
+# CLIENTES
+# ══════════════════════════════════════════
+clientes: "CLIENTES" {
+  style.fill: "#0c1a2e"
+  style.stroke: "#38bdf8"
+  style.font-color: "#7dd3fc"
+  style.bold: true
+
+  ext: "Extensão de Navegador\n(Chrome / Firefox / Edge)" {
+    shape: rectangle
+    style.fill: "#0f2744"
+    style.stroke: "#38bdf8"
+    style.font-color: "#f8fafc"
+  }
+
+  mobile: "App Mobile\n(React Native / PWA)" {
+    shape: rectangle
+    style.fill: "#0f2744"
+    style.stroke: "#38bdf8"
+    style.font-color: "#f8fafc"
+  }
+}
+
+# ══════════════════════════════════════════
+# LOJAS PARCEIRAS
+# ══════════════════════════════════════════
+parceiros: "LOJAS PARCEIRAS" {
+  style.fill: "#1a1a0e"
+  style.stroke: "#facc15"
+  style.font-color: "#fde68a"
+  style.bold: true
+
+  loja_a: "Loja A" {
+    shape: rectangle
+    style.fill: "#2e2a0f"
+    style.stroke: "#facc15"
+    style.font-color: "#f8fafc"
+  }
+  loja_b: "Loja B" {
+    shape: rectangle
+    style.fill: "#2e2a0f"
+    style.stroke: "#facc15"
+    style.font-color: "#f8fafc"
+  }
+  loja_n: "Loja N  ···" {
+    shape: rectangle
+    style.fill: "#2e2a0f"
+    style.stroke: "#facc15"
+    style.font-color: "#f8fafc"
+  }
+}
+
+# ══════════════════════════════════════════
+# PARTNER SDK
+# ══════════════════════════════════════════
+sdk: "Partner SDK\n(JS snippet / REST)" {
+  shape: rectangle
+  style.fill: "#1c1208"
+  style.stroke: "#f59e0b"
+  style.font-color: "#fde68a"
+}
+
+# ══════════════════════════════════════════
+# CHECKOUTSEGURO PLATFORM
+# ══════════════════════════════════════════
+platform: "CHECKOUTSEGURO PLATFORM" {
+  style.fill: "#0d0d1f"
+  style.stroke: "#a78bfa"
+  style.stroke-width: 3
+  style.font-color: "#c4b5fd"
+  style.bold: true
+
+  identity: "Identity Service\n(cadastro único)\n────────────────\n• Onboarding Web3\n• Geração de carteira\n• Frase de segurança\n• Mnemônico" {
+    shape: rectangle
+    style.fill: "#1e0f4a"
+    style.stroke: "#38bdf8"
+    style.font-color: "#f8fafc"
+  }
+
+  wallet: "Wallet Service\n(carteira-ethereum)\n────────────────\n• KMS proprietário\n• Assina server-side\n• Fernet + bcrypt\n• Sem MetaMask" {
+    shape: rectangle
+    style.fill: "#1e0f4a"
+    style.stroke: "#a78bfa"
+    style.font-color: "#f8fafc"
+    style.bold: true
+  }
+
+  auth: "Auth Service\n(sdk-metamask / SIWE)\n────────────────\n• Nonce EIP-4361\n• Verifica assinatura\n• JWT HttpOnly\n• Anti-replay" {
+    shape: rectangle
+    style.fill: "#1e0f4a"
+    style.stroke: "#a78bfa"
+    style.font-color: "#f8fafc"
+  }
+
+  order: "Order Service\n────────────────\n• Valida pedido\n• Prova de compra\n• Recibo criptográfico\n• Non-repudiation" {
+    shape: rectangle
+    style.fill: "#0f2e1a"
+    style.stroke: "#34d399"
+    style.font-color: "#f8fafc"
+  }
+
+  nonce: "Nonce Store\n(Redis · TTL 5min)" {
+    shape: cylinder
+    style.fill: "#2d0f0f"
+    style.stroke: "#f87171"
+    style.font-color: "#f8fafc"
+  }
+}
+
+# ══════════════════════════════════════════
+# PERSISTÊNCIA
+# ══════════════════════════════════════════
+db: "PERSISTÊNCIA" {
+  style.fill: "#0a1f0a"
+  style.stroke: "#34d399"
+  style.font-color: "#6ee7b7"
+  style.bold: true
+
+  db_users: "DB Usuários\n(identidade única)" {
+    shape: cylinder
+    style.fill: "#052e16"
+    style.stroke: "#34d399"
+    style.font-color: "#f8fafc"
+  }
+
+  db_orders: "DB Pedidos\n(recibos criptográficos)" {
+    shape: cylinder
+    style.fill: "#052e16"
+    style.stroke: "#34d399"
+    style.font-color: "#f8fafc"
+  }
+}
+
+# ══════════════════════════════════════════
+# BLOCKCHAIN (opcional)
+# ══════════════════════════════════════════
+chain: "Ethereum RPC\n(Alchemy · opcional)" {
+  shape: hexagon
+  style.fill: "#1c1208"
+  style.stroke: "#f59e0b"
+  style.font-color: "#fde68a"
+}
+
+# ── Conexões ──────────────────────────────
+clientes.ext -> sdk: "checkout event" { style.stroke: "#facc15" }
+clientes.mobile -> sdk: "checkout event" { style.stroke: "#facc15" }
+parceiros.loja_a -> sdk
+parceiros.loja_b -> sdk
+parceiros.loja_n -> sdk
+
+sdk -> platform.identity: "POST /identity/*" { style.stroke: "#38bdf8"; style.stroke-dash: 4 }
+sdk -> platform.auth: "GET /api/nonce\nPOST /api/verify" { style.stroke: "#a78bfa"; style.stroke-dash: 4 }
+sdk -> platform.wallet: "POST /wallet/sign" { style.stroke: "#a78bfa"; style.stroke-dash: 4; style.bold: true }
+sdk -> platform.order: "POST /order/confirm" { style.stroke: "#34d399"; style.stroke-dash: 4 }
+
+platform.identity -> platform.wallet: "gera carteira" { style.stroke: "#38bdf8" }
+platform.wallet -> platform.auth: "assinatura ETH" { style.stroke: "#a78bfa"; style.bold: true }
+platform.auth -> platform.nonce: "armazena / invalida" { style.stroke: "#f87171" }
+platform.order -> platform.auth: "verifica assinatura" { style.stroke: "#a78bfa" }
+
+platform.identity -> db.db_users
+platform.wallet -> db.db_users: "lê chave enc."
+platform.order -> db.db_orders
+
+platform.auth -> chain: "EIP-1271\n(opcional)" { style.stroke: "#f59e0b"; style.stroke-dash: 6 }
+
+sdk -> parceiros.loja_a: "callback: autorizado" { style.stroke: "#34d399"; style.stroke-dash: 4 }
+sdk -> parceiros.loja_b: "callback: autorizado" { style.stroke: "#34d399"; style.stroke-dash: 4 }

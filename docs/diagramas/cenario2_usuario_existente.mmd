@@ -1,0 +1,46 @@
+sequenceDiagram
+    autonumber
+    actor U as Usuário (Cadastrado)
+    participant EXT as Extensão / App Mobile
+    participant LOJA as Loja Parceira
+    participant AUTH as Auth Service<br/>(sdk-metamask / SIWE)
+    participant WS as Wallet Service<br/>(carteira-ethereum)
+    participant OS as Order Service
+    participant DB as Banco de Dados
+
+    Note over U,DB: ── CENÁRIO 2: USUÁRIO EXISTENTE ─ LOGIN + CHECKOUT ──
+
+    U->>LOJA: Navega e adiciona produtos ao carrinho
+    U->>LOJA: Clica em "Finalizar Compra"
+
+    LOJA->>EXT: Dispara evento checkout<br/>{parceiro_id, cart_hash, valor}
+    EXT-->>U: Popup CheckoutSeguro:<br/>"Confirmar compra de R$ XX,XX"<br/>Campo: Frase de Segurança
+
+    Note over EXT,AUTH: ── AUTENTICAÇÃO SIWE (EIP-4361) ──
+    EXT->>AUTH: GET /api/nonce?address={endereço_armazenado}
+    AUTH-->>EXT: {nonce, mensagem SIWE, TTL: 300s}
+
+    Note over EXT,WS: ── ASSINATURA SERVER-SIDE (sem MetaMask) ──
+    EXT->>WS: POST /wallet/sign<br/>{mensagem_siwe, frase_segurança}
+    WS->>DB: Valida frase (bcrypt.checkpw)
+    WS->>WS: Descriptografa chave privada<br/>(Fernet, apenas em memória)
+    WS->>WS: Assina mensagem SIWE<br/>(personal_sign)
+    WS-->>EXT: {assinatura_eth}
+
+    Note over EXT,AUTH: ── VERIFICAÇÃO DE IDENTIDADE ──
+    EXT->>AUTH: POST /api/verify<br/>{mensagem, assinatura}
+    AUTH->>AUTH: Verifica assinatura criptográfica<br/>Invalida nonce (uso único)
+    AUTH-->>EXT: {JWT, DID:ethr:0x..., autenticado: true}
+
+    Note over EXT,OS: ── ASSINATURA DO PEDIDO ──
+    EXT->>AUTH: GET /api/nonce (novo nonce para o pedido)
+    EXT->>WS: POST /wallet/sign-order<br/>{cart_hash, parceiro_id, valor, frase_segurança}
+    WS-->>EXT: {assinatura_pedido}
+
+    EXT->>OS: POST /order/confirm<br/>{cart_hash, assinatura_pedido, JWT, parceiro_id}
+    OS->>AUTH: Verifica assinatura do pedido
+    OS->>DB: Persiste pedido<br/>{hash, assinatura_eth, endereço,<br/>parceiro_id, timestamp}
+    OS-->>EXT: {pedido_id, recibo_criptografico}
+
+    EXT-->>U: ✅ Compra confirmada!<br/>Recibo com assinatura Ethereum
+    EXT->>LOJA: Callback: pedido autorizado<br/>{pedido_id, assinatura}
