@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fazendinha Orgânica — Loja</title>
+  <style>
+    :root {
+      --bg: #f0fdf4; --card: #ffffff; --border: #d1fae5;
+      --primary: #16a34a; --primary-dark: #15803d;
+      --accent: #38bdf8; --text: #1a2e1a; --muted: #6b7280;
+      --danger: #ef4444; --success: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; }
+
+    header {
+      background: var(--primary); color: white; padding: 16px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-size: 1.3rem; font-weight: 800; }
+    .logo span { opacity: 0.7; font-size: 0.8rem; font-weight: 400; margin-left: 8px; }
+    .cart-btn {
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+      color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9rem;
+    }
+    .cart-count {
+      background: #fbbf24; color: #1a2e1a; border-radius: 50%;
+      width: 20px; height: 20px; display: inline-flex; align-items: center;
+      justify-content: center; font-size: 0.75rem; font-weight: 700; margin-left: 6px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #15803d, #166534);
+      color: white; text-align: center; padding: 48px 24px;
+    }
+    .hero h1 { font-size: 2rem; margin-bottom: 8px; }
+    .hero p { opacity: 0.8; font-size: 1rem; }
+
+    .products { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+    .products h2 { font-size: 1.3rem; color: var(--primary); margin-bottom: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+
+    .product-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px; transition: box-shadow 0.2s;
+    }
+    .product-card:hover { box-shadow: 0 4px 20px rgba(22,163,74,0.15); }
+    .product-emoji { font-size: 2.5rem; margin-bottom: 12px; }
+    .product-name { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+    .product-desc { color: var(--muted); font-size: 0.85rem; margin-bottom: 12px; }
+    .product-footer { display: flex; align-items: center; justify-content: space-between; }
+    .product-price { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
+    .add-btn {
+      background: var(--primary); color: white; border: none;
+      padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.88rem;
+      transition: background 0.2s;
+    }
+    .add-btn:hover { background: var(--primary-dark); }
+    .add-btn.added { background: var(--success); }
+
+    /* Cart Sidebar */
+    .cart-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4); z-index: 200; display: none;
+    }
+    .cart-overlay.open { display: block; }
+    .cart-sidebar {
+      position: fixed; top: 0; right: -420px; width: 400px; max-width: 95vw;
+      height: 100%; background: white; z-index: 201; padding: 24px;
+      transition: right 0.3s; overflow-y: auto;
+      display: flex; flex-direction: column;
+    }
+    .cart-sidebar.open { right: 0; }
+    .cart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .cart-header h2 { font-size: 1.1rem; color: var(--primary); }
+    .close-cart { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--muted); }
+    .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .cart-item-name { font-size: 0.9rem; font-weight: 600; }
+    .cart-item-price { color: var(--primary); font-weight: 700; }
+    .remove-item { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1rem; }
+    .cart-empty { color: var(--muted); text-align: center; padding: 40px 0; font-size: 0.9rem; }
+    .cart-total { margin-top: auto; padding-top: 16px; border-top: 2px solid var(--border); }
+    .total-row { display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; }
+    .checkout-btn {
+      width: 100%; padding: 14px; background: var(--primary); color: white;
+      border: none; border-radius: 10px; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .checkout-btn:hover { background: var(--primary-dark); }
+    .checkout-btn:disabled { background: var(--muted); cursor: not-allowed; }
+
+    /* CS Badge */
+    .cs-badge {
+      display: flex; align-items: center; gap: 6px;
+      background: #f0f9ff; border: 1px solid #bae6fd;
+      border-radius: 6px; padding: 6px 10px; margin-bottom: 12px;
+      font-size: 0.78rem; color: #0369a1;
+    }
+
+    /* Orders panel */
+    .orders-panel { max-width: 1100px; margin: 0 auto; padding: 0 24px 40px; }
+    .orders-panel h2 { font-size: 1.1rem; color: var(--primary); margin-bottom: 12px; }
+    .order-row {
+      background: white; border: 1px solid var(--border); border-radius: 8px;
+      padding: 12px 16px; margin-bottom: 8px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .order-id { font-family: monospace; font-size: 0.8rem; color: var(--muted); }
+    .order-addr { font-family: monospace; font-size: 0.75rem; color: var(--accent); }
+    .order-amount { font-weight: 700; color: var(--primary); }
+    .order-status { font-size: 0.75rem; color: var(--success); background: #f0fdf4; padding: 2px 8px; border-radius: 20px; }
+
+    .alert-toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      padding: 14px 20px; border-radius: 10px; font-size: 0.9rem;
+      font-weight: 600; max-width: 340px; display: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .alert-toast.success { background: #052e16; border: 1px solid #22c55e; color: #22c55e; display: block; }
+    .alert-toast.error { background: #2d0f0f; border: 1px solid #ef4444; color: #ef4444; display: block; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">🌿 Fazendinha Orgânica <span>Laboratório CheckoutSeguro</span></div>
+    <button class="cart-btn" onclick="toggleCart()">
+      🛒 Carrinho <span class="cart-count" id="cart-count">0</span>
+    </button>
+  </header>
+
+  <div class="hero">
+    <h1>Produtos Direto da Fazenda</h1>
+    <p>Orgânicos, frescos e com pagamento seguro via CheckoutSeguro</p>
+  </div>
+
+  <div class="products">
+    <h2>Nossos Produtos</h2>
+    <div class="grid" id="products-grid"></div>
+  </div>
+
+  <div class="orders-panel">
+    <h2>📋 Pedidos Confirmados (Painel da Loja)</h2>
+    <div id="orders-list"><div style="color:var(--muted);font-size:0.85rem">Carregando...</div></div>
+  </div>
+
+  <!-- Cart Sidebar -->
+  <div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
+  <div class="cart-sidebar" id="cart-sidebar">
+    <div class="cart-header">
+      <h2>🛒 Carrinho</h2>
+      <button class="close-cart" onclick="toggleCart()">✕</button>
+    </div>
+    <div id="cart-items"></div>
+    <div class="cart-total">
+      <div class="cs-badge">
+        🔐 <span>Compra protegida por CheckoutSeguro</span>
+      </div>
+      <div class="total-row">
+        <span>Total</span>
+        <span id="cart-total">R$ 0,00</span>
+      </div>
+      <button class="checkout-btn" id="checkout-btn" onclick="doCheckout()">
+        🔐 Finalizar com CheckoutSeguro
+      </button>
+    </div>
+  </div>
+
+  <div class="alert-toast" id="toast"></div>
+
+  <!-- Partner SDK -->
+  <script src="/static/checkoutseguro-sdk.js"></script>
+  <script>
+    const STORE_ID = 'fazendinha-organica';
+    let cart = [];
+    let products = [];
+
+    // Inicializa o SDK
+    CheckoutSeguro.init({
+      storeId: STORE_ID,
+      verifyUrl: '/api/verify-order',
+      onSuccess: (data) => {
+        showToast('success', `✅ Pedido ${data.orderId.slice(0,8)}... confirmado com assinatura criptográfica!`);
+        cart = [];
+        updateCart();
+        toggleCart();
+        setTimeout(loadOrders, 1500);
+      },
+      onError: (e) => {
+        showToast('error', `❌ Erro na verificação: ${e.message}`);
+      }
+    });
+
+    async function loadProducts() {
+      const res = await fetch('/api/products');
+      products = await res.json();
+      const grid = document.getElementById('products-grid');
+      grid.innerHTML = products.map(p => `
+        <div class="product-card">
+          <div class="product-emoji">${p.emoji}</div>
+          <div class="product-name">${p.name}</div>
+          <div class="product-desc">${p.desc}</div>
+          <div class="product-footer">
+            <div class="product-price">R$ ${p.price.toFixed(2).replace('.',',')}</div>
+            <button class="add-btn" id="btn-${p.id}" onclick="addToCart(${p.id})">
+              + Adicionar
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addToCart(productId) {
+      const product = products.find(p => p.id === productId);
+      const existing = cart.find(i => i.id === productId);
+      if (existing) {
+        existing.qty++;
+      } else {
+        cart.push({ ...product, qty: 1 });
+      }
+      updateCart();
+      const btn = document.getElementById(`btn-${productId}`);
+      btn.textContent = '✓ Adicionado';
+      btn.classList.add('added');
+      setTimeout(() => { btn.textContent = '+ Adicionar'; btn.classList.remove('added'); }, 1500);
+    }
+
+    function removeFromCart(productId) {
+      cart = cart.filter(i => i.id !== productId);
+      updateCart();
+    }
+
+    function updateCart() {
+      const count = cart.reduce((s, i) => s + i.qty, 0);
+      const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+      document.getElementById('cart-count').textContent = count;
+      document.getElementById('cart-total').textContent = `R$ ${total.toFixed(2).replace('.',',')}`;
+
+      const itemsEl = document.getElementById('cart-items');
+      if (!cart.length) {
+        itemsEl.innerHTML = '<div class="cart-empty">Seu carrinho está vazio.</div>';
+        return;
+      }
+      itemsEl.innerHTML = cart.map(i => `
+        <div class="cart-item">
+          <div>
+            <div class="cart-item-name">${i.emoji} ${i.name}</div>
+            <div style="font-size:0.78rem;color:var(--muted)">${i.qty}x R$ ${i.price.toFixed(2).replace('.',',')}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="cart-item-price">R$ ${(i.price * i.qty).toFixed(2).replace('.',',')}</div>
+            <button class="remove-item" onclick="removeFromCart(${i.id})">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function doCheckout() {
+      if (!cart.length) { showToast('error', 'Adicione produtos ao carrinho.'); return; }
+      const btn = document.getElementById('checkout-btn');
+      btn.disabled = true;
+      btn.textContent = 'Aguardando assinatura...';
+
+      const orderId = 'ORD-' + Date.now() + '-' + Math.random().toString(36).slice(2,7).toUpperCase();
+      const amount = cart.reduce((s, i) => s + i.price * i.qty, 0);
+      const items = cart.map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty }));
+
+      await CheckoutSeguro.checkout({ orderId, amount, items });
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = '🔐 Finalizar com CheckoutSeguro';
+      }, 10000);
+    }
+
+    async function loadOrders() {
+      try {
+        const res = await fetch('/api/orders');
+        const orders = await res.json();
+        const el = document.getElementById('orders-list');
+        if (!orders.length) {
+          el.innerHTML = '<div style="color:var(--muted);font-size:0.85rem">Nenhum pedido ainda.</div>';
+          return;
+        }
+        el.innerHTML = orders.map(o => `
+          <div class="order-row">
+            <div>
+              <div class="order-id">${o.order_id}</div>
+              <div class="order-addr">${o.buyer_address}</div>
+            </div>
+            <div style="text-align:right">
+              <div class="order-amount">R$ ${Number(o.amount).toFixed(2).replace('.',',')}</div>
+              <div class="order-status">✅ ${o.status}</div>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        document.getElementById('orders-list').innerHTML = '<div style="color:var(--muted)">Erro ao carregar.</div>';
+      }
+    }
+
+    function toggleCart() {
+      document.getElementById('cart-overlay').classList.toggle('open');
+      document.getElementById('cart-sidebar').classList.toggle('open');
+    }
+
+    function showToast(type, msg) {
+      const t = document.getElementById('toast');
+      t.className = `alert-toast ${type}`;
+      t.textContent = msg;
+      setTimeout(() => { t.className = 'alert-toast'; }, 5000);
+    }
+
+    loadProducts();
+    loadOrders();
+    setInterval(loadOrders, 10000);
+  </script>
+</body>
+</html>

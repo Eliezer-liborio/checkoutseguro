@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>CheckoutSeguro</title>
+  <style>
+    :root {
+      --bg: #0a0f1e; --card: #111827; --border: #1e293b;
+      --accent: #38bdf8; --accent2: #a78bfa; --success: #34d399;
+      --warn: #f59e0b; --danger: #f87171; --text: #f1f5f9; --muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 320px; min-height: 200px;
+      background: var(--bg); color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 16px;
+    }
+    .header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .logo {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; font-size: 16px;
+    }
+    .title { font-size: 1rem; font-weight: 700; }
+    .title span { color: var(--accent); }
+    .status-dot {
+      margin-left: auto; width: 8px; height: 8px;
+      border-radius: 50%; background: var(--muted);
+    }
+    .status-dot.ok { background: var(--success); }
+    .status-dot.err { background: var(--danger); }
+
+    .section { margin-bottom: 12px; }
+    .label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+    .value { font-size: 0.82rem; color: var(--text); word-break: break-all; }
+    .address { font-family: monospace; color: var(--accent); font-size: 0.75rem; }
+
+    .btn {
+      width: 100%; padding: 10px; border-radius: 8px; border: none;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer; margin-top: 8px;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #0a0f1e; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .alert { padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; margin-top: 8px; }
+    .alert-success { background: #052e16; border: 1px solid var(--success); color: var(--success); }
+    .alert-error { background: #2d0f0f; border: 1px solid var(--danger); color: var(--danger); }
+    .alert-warn { background: #1c1208; border: 1px solid var(--warn); color: var(--warn); }
+
+    .divider { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+    .footer { font-size: 0.68rem; color: var(--muted); text-align: center; margin-top: 12px; }
+    a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">🔐</div>
+    <div class="title">Checkout<span>Seguro</span></div>
+    <div class="status-dot" id="dot"></div>
+  </div>
+
+  <div id="state-loading">
+    <div style="color:var(--muted); font-size:0.85rem">Conectando ao app local...</div>
+  </div>
+
+  <div id="state-no-app" style="display:none">
+    <div class="alert alert-error">
+      App local não encontrado na porta 7432.<br>
+      Inicie o CheckoutSeguro no seu computador.
+    </div>
+    <button class="btn btn-outline" onclick="window.open('https://github.com/Eliezer-liborio/checkoutseguro')">
+      📥 Como instalar
+    </button>
+  </div>
+
+  <div id="state-no-identity" style="display:none">
+    <div class="alert alert-warn">Nenhuma identidade encontrada.</div>
+    <button class="btn btn-primary" onclick="window.open('http://localhost:7432')">
+      ➕ Criar minha Identidade
+    </button>
+  </div>
+
+  <div id="state-active" style="display:none">
+    <div class="section">
+      <div class="label">Identidade Ativa</div>
+      <div class="address" id="popup-address"></div>
+    </div>
+    <div class="section">
+      <div class="label">Status</div>
+      <div class="value" style="color:var(--success)">✅ Pronto para compras</div>
+    </div>
+    <hr class="divider">
+    <button class="btn btn-outline" onclick="window.open('http://localhost:7432')">
+      🗂 Ver histórico de compras
+    </button>
+  </div>
+
+  <div class="footer">
+    App local · <a href="http://localhost:7432/docs" target="_blank">API Docs</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

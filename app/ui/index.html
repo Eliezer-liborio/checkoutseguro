@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CheckoutSeguro — Minha Identidade</title>
+  <style>
+    :root {
+      --bg: #0a0f1e;
+      --card: #111827;
+      --border: #1e293b;
+      --accent: #38bdf8;
+      --accent2: #a78bfa;
+      --success: #34d399;
+      --warn: #f59e0b;
+      --danger: #f87171;
+      --text: #f1f5f9;
+      --muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+    }
+    header {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .logo {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    h1 { font-size: 1.4rem; font-weight: 700; }
+    h1 span { color: var(--accent); }
+    .badge {
+      margin-left: auto;
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 20px;
+      background: #1e293b;
+      color: var(--muted);
+    }
+    .badge.ok { background: #052e16; color: var(--success); }
+
+    .card {
+      width: 100%;
+      max-width: 600px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .card h2 { font-size: 1rem; color: var(--accent); margin-bottom: 16px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .field input {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .field input:focus { border-color: var(--accent); }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #0a0f1e; }
+    .btn-success { background: var(--success); color: #0a0f1e; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-top: 12px;
+      display: none;
+    }
+    .alert.show { display: block; }
+    .alert-success { background: #052e16; border: 1px solid var(--success); color: var(--success); }
+    .alert-error { background: #2d0f0f; border: 1px solid var(--danger); color: var(--danger); }
+    .alert-warn { background: #1c1208; border: 1px solid var(--warn); color: var(--warn); }
+
+    .identity-card {
+      background: linear-gradient(135deg, #0f172a, #1e0f4a);
+      border: 1px solid var(--accent2);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 16px;
+    }
+    .identity-card .label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+    .identity-card .value {
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: var(--text);
+      word-break: break-all;
+      background: #0a0f1e;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      position: relative;
+    }
+    .identity-card .value:hover::after {
+      content: "clique para copiar";
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.65rem;
+      color: var(--accent);
+    }
+    .warn-box {
+      background: #1c1208;
+      border: 1px solid var(--warn);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.82rem;
+      color: var(--warn);
+      margin-top: 12px;
+    }
+
+    .address-display {
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: var(--accent);
+      word-break: break-all;
+    }
+    .purchases-list { margin-top: 8px; }
+    .purchase-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+    .purchase-item:last-child { border-bottom: none; }
+    .purchase-store { color: var(--accent); font-weight: 600; }
+    .purchase-amount { color: var(--success); }
+    .purchase-date { color: var(--muted); font-size: 0.75rem; }
+
+    #view-home, #view-register, #view-identity { display: none; }
+    #view-home.active, #view-register.active, #view-identity.active { display: block; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">🔐</div>
+    <div>
+      <h1>Checkout<span>Seguro</span></h1>
+      <div style="font-size:0.75rem; color:var(--muted)">App Local · Porta 7432</div>
+    </div>
+    <span class="badge ok" id="status-badge">● Ativo</span>
+  </header>
+
+  <!-- VIEW: HOME (sem identidade) -->
+  <div id="view-home">
+    <div class="card">
+      <h2>Bem-vindo ao CheckoutSeguro</h2>
+      <p style="color:var(--muted); font-size:0.9rem; line-height:1.6; margin-bottom:20px">
+        Sua identidade criptográfica para compras online. Instalado no seu hardware,
+        a chave privada <strong style="color:var(--text)">nunca sai do seu dispositivo</strong>.
+        Um cadastro único funciona em todas as lojas parceiras.
+      </p>
+      <button class="btn btn-primary" onclick="showRegister()">Criar minha Identidade</button>
+    </div>
+  </div>
+
+  <!-- VIEW: CADASTRO -->
+  <div id="view-register">
+    <div class="card">
+      <h2>Criar Identidade Web3</h2>
+      <div class="field">
+        <label>E-mail (opcional)</label>
+        <input type="email" id="reg-email" placeholder="seu@email.com">
+      </div>
+      <div class="field">
+        <label>Telefone (opcional)</label>
+        <input type="tel" id="reg-phone" placeholder="+55 11 99999-9999">
+      </div>
+      <div class="field">
+        <label>Frase de Segurança</label>
+        <input type="text" id="reg-phrase" placeholder="Gerando..." readonly
+               style="font-family:monospace; color:var(--accent)">
+        <div style="font-size:0.75rem; color:var(--muted); margin-top:4px">
+          Esta frase substitui sua senha. Memorize-a ou guarde em local seguro.
+        </div>
+      </div>
+      <button class="btn btn-outline" onclick="generatePhrase()" style="margin-bottom:12px">
+        🔄 Gerar nova frase
+      </button>
+      <button class="btn btn-primary" id="btn-register" onclick="doRegister()">
+        Criar minha Identidade
+      </button>
+      <div id="reg-alert" class="alert"></div>
+    </div>
+
+    <!-- Cartão de onboarding exibido após cadastro -->
+    <div class="card" id="onboarding-card" style="display:none">
+      <h2>⚠️ Guarde suas credenciais agora</h2>
+      <p style="color:var(--muted); font-size:0.85rem; margin-bottom:16px">
+        Estas informações não serão exibidas novamente. Copie e guarde em local seguro.
+      </p>
+      <div class="identity-card">
+        <div class="label">Endereço Público (seu identificador)</div>
+        <div class="value" id="ob-address" onclick="copyText(this)"></div>
+        <div class="label">Frase de Segurança (sua "senha" para compras)</div>
+        <div class="value" id="ob-phrase" onclick="copyText(this)" style="color:var(--accent)"></div>
+        <div class="label">Palavras Mnemônicas (recuperação de emergência)</div>
+        <div class="value" id="ob-mnemonic" onclick="copyText(this)" style="font-size:0.78rem; color:var(--warn)"></div>
+      </div>
+      <div class="warn-box">
+        ⚠️ <strong>Atenção:</strong> Nunca compartilhe sua Frase de Segurança ou Mnemônico.
+        O CheckoutSeguro nunca pedirá essas informações por e-mail ou telefone.
+      </div>
+      <button class="btn btn-success" style="margin-top:16px" onclick="confirmIdentity()">
+        ✅ Salvei minhas informações — Ativar conta
+      </button>
+    </div>
+  </div>
+
+  <!-- VIEW: IDENTIDADE ATIVA -->
+  <div id="view-identity">
+    <div class="card">
+      <h2>Minha Identidade</h2>
+      <div class="field">
+        <label>Endereço Ethereum</label>
+        <div class="address-display" id="id-address"></div>
+      </div>
+      <div class="field">
+        <label>E-mail</label>
+        <div id="id-email" style="color:var(--muted); font-size:0.9rem"></div>
+      </div>
+      <div style="margin-top:8px; font-size:0.8rem; color:var(--success)">
+        ✅ Identidade ativa — pronta para compras
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Histórico de Compras</h2>
+      <div id="purchases-list" class="purchases-list">
+        <div style="color:var(--muted); font-size:0.85rem">Carregando...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:7432';
+    let currentAddress = null;
+    let currentPhrase = null;
+
+    async function init() {
+      try {
+        const res = await fetch(`${API}/status`);
+        const data = await res.json();
+        if (data.has_identity) {
+          showIdentity(data);
+        } else {
+          showView('home');
+          generatePhrase();
+        }
+      } catch (e) {
+        showView('home');
+        generatePhrase();
+      }
+    }
+
+    function showView(name) {
+      document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.remove('active'));
+      document.getElementById(`view-${name}`).classList.add('active');
+    }
+
+    function showRegister() { showView('register'); }
+
+    async function generatePhrase() {
+      const words = ['tigre','leão','cobra','águia','lobo','urso','raposa','puma',
+        'azul','verde','roxo','dourado','negro','branco','prata','coral',
+        'monte','vale','rio','pedra','nuvem','vento','fogo','gelo',
+        'forte','veloz','sábio','bravo','calmo','livre','firme','claro'];
+      const pick = (arr, n) => arr.sort(() => Math.random()-0.5).slice(0,n);
+      const chosen = pick(words, 3);
+      const num = Math.floor(Math.random() * 90) + 10;
+      const phrase = `${chosen[0]}-${chosen[1]}-${chosen[2]}-${num}`;
+      document.getElementById('reg-phrase').value = phrase;
+      currentPhrase = phrase;
+    }
+
+    async function doRegister() {
+      const btn = document.getElementById('btn-register');
+      const alert = document.getElementById('reg-alert');
+      const phrase = document.getElementById('reg-phrase').value;
+      const email = document.getElementById('reg-email').value;
+      const phone = document.getElementById('reg-phone').value;
+
+      if (!phrase) { showAlert(alert, 'error', 'Gere uma frase de segurança primeiro.'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Criando identidade...';
+      hideAlert(alert);
+
+      try {
+        const res = await fetch(`${API}/identity/register`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ email, phone, phrase })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Erro no cadastro.');
+
+        currentAddress = data.address;
+        currentPhrase = phrase;
+
+        // Exibe cartão de onboarding
+        document.getElementById('ob-address').textContent = data.address;
+        document.getElementById('ob-phrase').textContent = data.phrase;
+        document.getElementById('ob-mnemonic').textContent = data.mnemonic;
+        document.getElementById('onboarding-card').style.display = 'block';
+        btn.style.display = 'none';
+
+      } catch (e) {
+        showAlert(alert, 'error', e.message);
+        btn.disabled = false;
+        btn.textContent = 'Criar minha Identidade';
+      }
+    }
+
+    async function confirmIdentity() {
+      if (!currentAddress) return;
+      try {
+        await fetch(`${API}/identity/confirm`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ address: currentAddress })
+        });
+        const res = await fetch(`${API}/status`);
+        const data = await res.json();
+        showIdentity(data);
+      } catch (e) {
+        alert('Erro ao confirmar. Tente novamente.');
+      }
+    }
+
+    async function showIdentity(data) {
+      showView('identity');
+      document.getElementById('id-address').textContent = data.address || '';
+      document.getElementById('id-email').textContent = data.email || '(não informado)';
+      await loadPurchases();
+    }
+
+    async function loadPurchases() {
+      try {
+        const res = await fetch(`${API}/purchases`);
+        const data = await res.json();
+        const list = document.getElementById('purchases-list');
+        if (!data.length) {
+          list.innerHTML = '<div style="color:var(--muted); font-size:0.85rem">Nenhuma compra registrada ainda.</div>';
+          return;
+        }
+        list.innerHTML = data.map(p => `
+          <div class="purchase-item">
+            <div>
+              <div class="purchase-store">${p.store_id}</div>
+              <div class="purchase-date">${new Date(p.timestamp).toLocaleString('pt-BR')}</div>
+            </div>
+            <div class="purchase-amount">R$ ${Number(p.amount).toFixed(2)}</div>
+          </div>
+        `).join('');
+      } catch (e) {
+        document.getElementById('purchases-list').innerHTML =
+          '<div style="color:var(--muted)">Erro ao carregar compras.</div>';
+      }
+    }
+
+    function copyText(el) {
+      navigator.clipboard.writeText(el.textContent.trim()).then(() => {
+        const orig = el.style.border;
+        el.style.border = '1px solid var(--success)';
+        setTimeout(() => el.style.border = orig, 1000);
+      });
+    }
+
+    function showAlert(el, type, msg) {
+      el.className = `alert alert-${type} show`;
+      el.textContent = msg;
+    }
+    function hideAlert(el) { el.className = 'alert'; }
+
+    init();
+  </script>
+</body>
+</html>
