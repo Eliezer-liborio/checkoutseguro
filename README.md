@@ -24,8 +24,6 @@ O **CheckoutSeguro** é uma solução B2B2C que une a conveniência da Web2 com 
 
 No e-commerce tradicional, o *chargeback* (quando o cliente alega "não fui eu que comprei") é um dos maiores ralos de dinheiro para os lojistas.
 
-Na Web3, a assinatura criptográfica resolve o chargeback (não-repúdio), mas a fricção de uso (instalar MetaMask, guardar seed phrase, comprar ether para gas) afasta 99% dos consumidores comuns.
-
 ##  Nossa Solução (Self-Custody)
 
 O **CheckoutSeguro** abstrai toda a complexidade da blockchain, mantendo o controle total nas mãos do usuário:
